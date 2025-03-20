@@ -21,4 +21,4 @@ jobs:
           aws-region: ap-northeast-2
 
       - name: Upload README to S3
-        run: aws s3 sync README.md s3://zipline-frontend
+        run: aws s3 cp README.md s3://zipline-frontend
