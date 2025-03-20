@@ -7,7 +7,7 @@ on:
       - dev
 
 jobs:
-  upload-to-s3:
+  cd:
     runs-on: ubuntu-latest
 
     steps:
@@ -31,6 +31,7 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
+
       - name: Determine S3 bucket name with branch name
         id: determine-bucket
         run: echo "bucket=zipline-fe-${{ github.ref_name }}" >> $GITHUB_ENV

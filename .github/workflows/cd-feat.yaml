@@ -1,0 +1,50 @@
+name: Manage S3 Buckets for Feature Branch PRs
+
+on:
+  pull_request:
+    types: [opened, closed]
+    branches:
+      - dev
+
+jobs:
+  cd:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18" # 프로젝트에서 사용하는 Node.js 버전에 맞게 설정
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Build project
+        run: yarn run build # Vite로 프로젝트를 빌드
+
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Handle S3 Buckets
+        env:
+          FEATURE_BRANCH: ${{ github.head_ref }}
+          S3_BUCKET: feat-${{ github.head_ref }}
+        run: |
+          if [ "${{ github.event.action }}" = "opened" ]; then
+            echo "Creating S3 bucket for feature branch: $S3_BUCKET"
+            aws s3api create-bucket --bucket $S3_BUCKET --region ap-northeast-2 --create-bucket-configuration LocationConstraint=ap-northeast-2
+            aws s3 sync ./dist s3://$S3_BUCKET/ --delete
+
+          elif [ "${{ github.event.action }}" = "closed" ] && [ "${{ github.event.pull_request.merged }}" = "true" ]; then
+            echo "Deleting S3 bucket for merged feature branch: $S3_BUCKET"
+            aws s3 rb s3://$S3_BUCKET --force
+          else
+            echo "No action needed"
+          fi
