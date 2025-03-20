@@ -43,7 +43,7 @@ jobs:
 
       - name: Handle Build Deployment and S3 Buckets
         env:
-          S3_BUCKET: ${{ env.bucket }}
+          S3_BUCKET: zipline-fe-${{ env.bucket }}
         run: |
           if [ "${{ github.event.action }}" = "opened" ] || [ "${{ github.event.action }}" = "synchronize" ]; then
             echo "Deploying and creating S3 bucket: $S3_BUCKET"
