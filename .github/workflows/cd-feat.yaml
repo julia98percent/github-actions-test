@@ -45,7 +45,7 @@ jobs:
         env:
           S3_BUCKET: ${{ env.bucket }}
         run: |
-          if [ "${{ github.event.action }}" = "opened" ]; then
+          if [ "${{ github.event.action }}" = "opened" ] || [ "${{ github.event.action }}" = "synchronize" ]; then
             echo "Deploying and creating S3 bucket: $S3_BUCKET"
             aws s3api create-bucket --bucket $S3_BUCKET --region ap-northeast-2 --create-bucket-configuration LocationConstraint=ap-northeast-2
             aws s3 sync ./dist s3://$S3_BUCKET/ --delete
