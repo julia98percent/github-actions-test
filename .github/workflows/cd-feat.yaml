@@ -37,8 +37,12 @@ jobs:
         env:
           FEATURE_BRANCH: ${{ github.head_ref }}
         run: |
-          # feat/ 이후의 문자열만 추출
+          # feat/ 이후의 문자열만 추출, empty string일 경우 exit
           BUCKET_NAME=$(echo $FEATURE_BRANCH | sed 's|^feat/||')
+          if [ -z "$BUCKET_NAME" ]; then
+            echo "Bucket name is not set properly. Exiting."
+            exit 1
+          fi
           echo "Bucket name determined: $BUCKET_NAME" # For debugging
           echo "bucket=$BUCKET_NAME" >> $GITHUB_ENV
 
@@ -46,15 +50,37 @@ jobs:
         env:
           S3_BUCKET: zipline-fe-${{ env.bucket }}
         run: |
-          if [ "${{ github.event.action }}" = "opened" ] || [ "${{ github.event.action }}" = "reopened" ]; then
+          if [ "${{ github.event.action }}" = "opened" ]; then
             echo "Deploying and creating S3 bucket: $S3_BUCKET"
             aws s3api create-bucket --bucket $S3_BUCKET --region ap-northeast-2 --create-bucket-configuration LocationConstraint=ap-northeast-2
+            aws s3api put-bucket-website --bucket $S3_BUCKET --website-configuration '{
+              "IndexDocument": {
+                "Suffix": "index.html"
+              }
+            }'
+
+            aws s3api put-bucket-policy --bucket $S3_BUCKET --policy '{
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": "*",
+                  "Action": "s3:GetObject",
+                  "Resource": "arn:aws:s3:::'$S3_BUCKET'/*"
+                }
+              ]
+            }'
+
+            aws s3api delete-public-access-block --bucket $S3_BUCKET
+
             aws s3 sync ./dist s3://$S3_BUCKET/ --delete
-          elif [ "${{ github.event.action }}" = "synchronize" ]; then
+
+          elif [ "${{ github.event.action }}" = "reopened" ] || [ "${{ github.event.action }}" = "synchronize" ]; then
             echo "Sync local job and S3 bucket: $S3_BUCKET"
             aws s3 sync ./dist s3://$S3_BUCKET/ --delete
           elif [ "${{ github.event.action }}" = "closed" ] && [ "${{ github.event.pull_request.merged }}" = "true" ]; then
             echo "Deleting S3 bucket: $S3_BUCKET"
+            aws s3 rm s3://$S3_BUCKET --recursive
             aws s3 rb s3://$S3_BUCKET --force
           else
             echo "No action needed"
