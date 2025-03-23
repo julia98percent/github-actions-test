@@ -1,4 +1,4 @@
-name: Manage S3 Buckets for Feature Branch PRs
+name: feature 브랜치 전용 S3 버킷 상태 관리
 
 on:
   pull_request:

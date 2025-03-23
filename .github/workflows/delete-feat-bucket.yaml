@@ -1,4 +1,4 @@
-name: Delete S3 Buckets for Merged Branch
+name: 작업 완료된 feature 브랜치의 S3 버킷 삭제
 
 on:
   pull_request:
