@@ -38,6 +38,8 @@ function App() {
       {/* Routes 정의 */}
       <Routes>
         <Route path="/about" element={<About />} />
+        <Route path="/me" element={<Me />} />
+        <Route path="/test" element={<Test />} />
       </Routes>
     </>
   );
@@ -46,6 +48,14 @@ function App() {
 // About 페이지 컴포넌트 추가
 function About() {
   return <h2>This is the About Page</h2>;
+}
+
+function Me() {
+  return <h2>This is the Me Page</h2>;
+}
+
+function Test() {
+  return <h2>This is the Test Page</h2>;
 }
 
 export default App;
