@@ -2,6 +2,7 @@ import { useState } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
+import { Link, Routes, Route } from "react-router-dom";
 
 function App() {
   const [count, setCount] = useState(0);
@@ -28,8 +29,23 @@ function App() {
       <p className="read-the-docs">
         Click on the Vite and React logos to learn more
       </p>
+
+      {/* 추가된 Link 태그 */}
+      <nav>
+        <Link to="/about">Go to About Page</Link>
+      </nav>
+
+      {/* Routes 정의 */}
+      <Routes>
+        <Route path="/about" element={<About />} />
+      </Routes>
     </>
   );
+}
+
+// About 페이지 컴포넌트 추가
+function About() {
+  return <h2>This is the About Page</h2>;
 }
 
 export default App;
