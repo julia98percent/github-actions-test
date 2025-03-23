@@ -32,24 +32,31 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
-      - name: Determine S3 bucket name with branch name
+      - name: Determine folder name in s3 feature bucket
         id: extract-bucket-name
         env:
           FEATURE_BRANCH: ${{ github.head_ref }}
         run: |
           # feat/ 이후의 문자열만 추출
-          BUCKET_NAME=$(echo $FEATURE_BRANCH | sed 's|^feat/||')
-          echo "Bucket name determined: $BUCKET_NAME" # For debugging
-          echo "bucket=$BUCKET_NAME" >> $GITHUB_ENV
+          if [[ "$FEATURE_BRANCH" == feat/* ]]; then
+            S3_FOLDER_NAME=$(echo $FEATURE_BRANCH | sed 's|^feat/||')
+            echo "Folder name determined: $S3_FOLDER_NAME"
+            echo "folder=$S3_FOLDER_NAME" >> $GITHUB_ENV
+          else
+             echo "Branch name is not in expected format: $FEATURE_BRANCH"
+             exit 1
+          fi
 
       - name: Handle Build Deployment and S3 Buckets
+        env:
+          S3_FOLDER: ${{ env.folder }}
         run: |
           if [ "${{ github.event.action }}" = "opened" ] || [ "${{ github.event.action }}" = "reopened" ] ||  [ "${{ github.event.action }}" = "synchronize" ]; then
             echo "Deploying to S3 folder: $S3_FOLDER"
             aws s3 sync ./dist s3://zipline-fe-feat/$S3_FOLDER/ --delete
           elif [ "${{ github.event.action }}" = "closed" ] && [ "${{ github.event.pull_request.merged }}" = "true" ]; then
-            echo "Deleting S3 bucket: zipline-fe-feat"
-            aws s3 rb s3://zipline-fe-feat/$S3_FOLDER/ --force
+            echo "Deleting S3 folder: $S3_FOLDER"
+            aws s3 rm s3://zipline-fe-feat/$S3_FOLDER/ --recursive
           else
             echo "No action needed"
           fi
