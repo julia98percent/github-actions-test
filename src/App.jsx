@@ -34,6 +34,12 @@ function App() {
       <nav>
         <Link to="/about">Go to About Page</Link>
       </nav>
+      <nav>
+        <Link to="/me">Go to me Page</Link>
+      </nav>
+      <nav>
+        <Link to="/test">Go to test Page</Link>
+      </nav>
 
       {/* Routes 정의 */}
       <Routes>
