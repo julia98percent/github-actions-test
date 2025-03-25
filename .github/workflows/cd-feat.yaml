@@ -33,31 +33,28 @@ jobs:
           aws-region: ap-northeast-2
 
       - name: Determine S3 bucket name with branch name
-        id: extract-bucket-name
+        id: generate-bucket-name
         env:
           FEATURE_BRANCH: ${{ github.head_ref }}
         run: |
           # feat/ 이후의 문자열만 추출, empty string일 경우 exit
-          BUCKET_NAME=$(echo $FEATURE_BRANCH | sed 's|^feat/||')
-          if [ -z "$BUCKET_NAME" ]; then
-            echo "Bucket name is not set properly. Exiting."
-            exit 1
-          fi
-          echo "Bucket name determined: $BUCKET_NAME" # For debugging
+          BUCKET_NAME=$(echo "${{ github.head_ref }}" | 
+            sed -e 's/feat\///' |  # feat/ 접두사 제거
+            tr '[:upper:]' '[:lower:]' |  # 대문자를 소문자로 변환
+            sed -e 's/[^a-z0-9-]/-/g' |  # 허용되지 않는 문자를 대시로 대체
+            sed -e 's/^-*//; s/-*$//' |  # 시작과 끝의 대시 제거
+            cut -c1-50)  # 최대 길이 제한
 
-      - name: Create Bucket
-        env:
-          S3_BUCKET: zipline-fe-${{ env.BUCKET_NAME }}
-        continue-on-error: true
-        run: |
-          aws s3api create-bucket --bucket $S3_BUCKET --region ap-northeast-2 --create-bucket-configuration LocationConstraint=ap-northeast-2
+          echo "bucket-name=zipline-fe-$BUCKET_NAME" >> $GITHUB_OUTPUT
 
-      - name: Handle Build Deployment and S3 Buckets
+      - name: Manage S3 Buckets
         env:
-          S3_BUCKET: zipline-fe-${{ env.BUCKET_NAME }}
+          S3_BUCKET: ${{ steps.generate-bucket-name.outputs.bucket-name }}
         run: |
-          if [ "${{ github.event.action }}" = "opened" ]; then
+          if [[ "${{ github.event.action }}" == "opened" || "${{ github.event.action }}" == "reopened" || "${{ github.event.action }}" == "synchronize" ]]; then
             echo "Set S3 bucket config: $S3_BUCKET"
+            if ! aws s3api head-bucket --bucket $S3_BUCKET 2>/dev/null; then
+            aws s3api create-bucket --bucket $S3_BUCKET --region ap-northeast-2 --create-bucket-configuration LocationConstraint=ap-northeast-2
 
             aws s3api delete-public-access-block --bucket $S3_BUCKET
             
@@ -73,13 +70,10 @@ jobs:
               ]
             }'
 
-            aws s3 website $S3_BUCKET --index-document index.html --error-document index.html
-
+            aws s3 website s3://$S3_BUCKET --index-document index.html --error-document index.html
+            
             aws s3 sync ./dist s3://$S3_BUCKET/ --delete
 
-          elif [ "${{ github.event.action }}" = "reopened" ] || [ "${{ github.event.action }}" = "synchronize" ]; then
-            echo "Sync local job and S3 bucket: $S3_BUCKET"
-            aws s3 sync ./dist s3://$S3_BUCKET/ --delete
           elif [ "${{ github.event.action }}" = "closed" ] && [ "${{ github.event.pull_request.merged }}" = "true" ]; then
             echo "Deleting S3 bucket: $S3_BUCKET"
             aws s3 rm s3://$S3_BUCKET --recursive
