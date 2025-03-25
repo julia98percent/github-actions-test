@@ -82,3 +82,11 @@ jobs:
           else
             echo "No action needed"
           fi
+
+  reusable_cd:
+    needs: cd-feat
+    if: github.event.action == 'opened'
+    uses: ./.github/workflows/preview-comment.yaml
+    with:
+      bucket_name: $S3_BUCKET
+      pr_number: ${{ github.event.pull_request.number }}"
