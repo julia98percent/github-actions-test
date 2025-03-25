@@ -88,7 +88,6 @@ jobs:
 
   add_comment:
     needs: cd-feat
-    if: github.event.action == 'opened'
     uses: ./.github/workflows/preview-comment.yaml
     with:
       bucket_name: ${{ needs.cd-feat.outputs.bucket-name }}
