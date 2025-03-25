@@ -3,7 +3,7 @@ name: PR에 Feature 브랜치 주소 코멘트 추가
 on:
   workflow_call:
     inputs:
-      bucket_name:
+      content:
         required: true
         type: string
       pr_number:
@@ -20,5 +20,5 @@ jobs:
       - name: comment PR
         uses: thollander/actions-comment-pull-request@v3
         with:
-          message: "🍐 배포 주소: ${{ inputs.bucket_name }}.s3-website.ap-northeast-2.amazonaws.com/"
+          message: ${{inputs.content}}
           pr-number: ${{ inputs.pr_number}}
