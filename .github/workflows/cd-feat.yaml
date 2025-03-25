@@ -9,6 +9,8 @@ on:
 jobs:
   cd-feat:
     runs-on: ubuntu-latest
+    outputs:
+      bucket_name: ${{ steps.generate-bucket-name.outputs.bucket_name }}
 
     steps:
       - name: Checkout the code
@@ -75,7 +77,7 @@ jobs:
 
             aws s3 sync ./dist s3://$S3_BUCKET/ --delete
 
-          elif [ "${{ github.event.action }}" = "closed" ] && [ "${{ github.event.pull_request.merged }}" = "true" ]; then
+          elif [[ "${{ github.event.action }}" = "closed" ] && [ "${{ github.event.pull_request.merged }}" = "true" ]]; then
             echo "Deleting S3 bucket: $S3_BUCKET"
             aws s3 rm s3://$S3_BUCKET --recursive
             aws s3 rb s3://$S3_BUCKET --force
@@ -83,10 +85,10 @@ jobs:
             echo "No action needed"
           fi
 
-  comment_s3_address:
+  add_comment:
     needs: cd-feat
     if: github.event.action == 'opened'
     uses: ./.github/workflows/preview-comment.yaml
     with:
-      bucket_name: $S3_BUCKET
+      bucket_name: ${{ needs.cd-feat.outputs.bucket_name }}
       pr_number: ${{ github.event.pull_request.number }}
