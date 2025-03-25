@@ -10,7 +10,7 @@ jobs:
   cd-feat:
     runs-on: ubuntu-latest
     outputs:
-      bucket_name: ${{ steps.generate-bucket-name.outputs.bucket_name }}
+      bucket-name: ${{ steps.generate-bucket-name.outputs.bucket-name }}
 
     steps:
       - name: Checkout the code
@@ -91,5 +91,5 @@ jobs:
     if: github.event.action == 'opened'
     uses: ./.github/workflows/preview-comment.yaml
     with:
-      bucket_name: ${{ needs.cd-feat.outputs.bucket_name }}
+      bucket-name: ${{ needs.cd-feat.outputs.bucket-name }}
       pr_number: ${{ github.event.pull_request.number }}
