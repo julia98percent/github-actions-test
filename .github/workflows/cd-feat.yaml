@@ -91,5 +91,5 @@ jobs:
     if: github.event.action == 'opened'
     uses: ./.github/workflows/preview-comment.yaml
     with:
-      bucket-name: ${{ needs.cd-feat.outputs.bucket-name }}
+      bucket_name: ${{ needs.cd-feat.outputs.bucket-name }}
       pr_number: ${{ github.event.pull_request.number }}
