@@ -1,4 +1,4 @@
-name: Build and Upload to S3
+name: 빌드 및 S3 업로드
 
 on:
   push:
