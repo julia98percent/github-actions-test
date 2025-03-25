@@ -50,7 +50,6 @@ jobs:
           echo "bucket-name=zipline-fe-$BUCKET_NAME" >> $GITHUB_OUTPUT
 
       - name: Manage S3 Buckets
-        continue-on-error: true
         env:
           S3_BUCKET: ${{ steps.generate-bucket-name.outputs.bucket-name }}
 
@@ -79,7 +78,7 @@ jobs:
 
             aws s3 sync ./dist s3://$S3_BUCKET/ --delete
 
-          elif [[ "${{ github.event.action }}" = "closed" ] && [ "${{ github.event.pull_request.merged }}" = "true" ]]; then
+          elif [[ "${{ github.event.action }}" = "closed" && "${{ github.event.pull_request.merged }}" = "true" ]]; then
             echo "Deleting S3 bucket: $S3_BUCKET"
             aws s3 rm s3://$S3_BUCKET --recursive
             aws s3 rb s3://$S3_BUCKET --force
