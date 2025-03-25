@@ -46,6 +46,8 @@ jobs:
           echo "Bucket name determined: $BUCKET_NAME" # For debugging
 
       - name: Create Bucket
+        env:
+          S3_BUCKET: zipline-fe-${{ env.BUCKET_NAME }}
         continue-on-error: true
         run: |
           aws s3api create-bucket --bucket $S3_BUCKET --region ap-northeast-2 --create-bucket-configuration LocationConstraint=ap-northeast-2
