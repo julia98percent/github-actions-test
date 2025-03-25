@@ -71,7 +71,8 @@ jobs:
             }'
 
             aws s3 website s3://$S3_BUCKET --index-document index.html --error-document index.html
-            
+          fi
+
             aws s3 sync ./dist s3://$S3_BUCKET/ --delete
 
           elif [ "${{ github.event.action }}" = "closed" ] && [ "${{ github.event.pull_request.merged }}" = "true" ]; then
