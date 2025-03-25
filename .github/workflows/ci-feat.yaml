@@ -9,6 +9,8 @@ on:
 jobs:
   ci-feat:
     runs-on: ubuntu-latest
+    outputs:
+      lint_results: ${{ steps.lint.outputs.lint_results }}
 
     steps:
       - name: Checkout the code
@@ -25,8 +27,8 @@ jobs:
       - name: Run Lint
         id: lint
         run: |
-          yarn run lint > lint-results.txt
-          cat lint-results.txt
+          output=$(yarn run lint)
+          echo "lint_results=$output" >> $GITHUB_OUTPUT
 
       - name: Build project
         run: yarn run build # Vite로 프로젝트를 빌드
@@ -35,5 +37,5 @@ jobs:
     needs: ci-feat
     uses: ./.github/workflows/preview-comment.yaml
     with:
-      content: ${{ needs.cd-feat.outputs.bucket-name }}
+      content: ${{ needs.ci-feat.outputs.lint_results }}
       pr_number: ${{ github.event.pull_request.number }}
