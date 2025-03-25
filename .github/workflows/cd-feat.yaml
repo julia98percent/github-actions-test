@@ -44,21 +44,21 @@ jobs:
             exit 1
           fi
           echo "Bucket name determined: $BUCKET_NAME" # For debugging
-          echo "bucket=$BUCKET_NAME" >> $GITHUB_ENV
+
+      - name: Create Bucket
+        continue-on-error: true
+        run: |
+          aws s3api create-bucket --bucket $S3_BUCKET --region ap-northeast-2 --create-bucket-configuration LocationConstraint=ap-northeast-2
 
       - name: Handle Build Deployment and S3 Buckets
         env:
-          S3_BUCKET: zipline-fe-${{ env.bucket }}
+          S3_BUCKET: zipline-fe-${{ env.BUCKET_NAME }}
         run: |
           if [ "${{ github.event.action }}" = "opened" ]; then
-            echo "Deploying and creating S3 bucket: $S3_BUCKET"
-            aws s3api create-bucket --bucket $S3_BUCKET --region ap-northeast-2 --create-bucket-configuration LocationConstraint=ap-northeast-2
-            aws s3api put-bucket-website --bucket $S3_BUCKET --website-configuration '{
-              "IndexDocument": {
-                "Suffix": "index.html"
-              }
-            }'
+            echo "Set S3 bucket config: $S3_BUCKET"
 
+            aws s3api delete-public-access-block --bucket $S3_BUCKET
+            
             aws s3api put-bucket-policy --bucket $S3_BUCKET --policy '{
               "Version": "2012-10-17",
               "Statement": [
@@ -71,7 +71,7 @@ jobs:
               ]
             }'
 
-            aws s3api delete-public-access-block --bucket $S3_BUCKET
+            aws s3 website $S3_BUCKET --index-document index.html --error-document index.html
 
             aws s3 sync ./dist s3://$S3_BUCKET/ --delete
 
